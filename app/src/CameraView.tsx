@@ -107,14 +107,14 @@ const uploadToGpt = async (imageBase64: string) => {
   const body = JSON.stringify({
     image: imageBase64,
   });
-  console.log("asking GPT");
-  // console.log(imageBase64)
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  // return {
-  //   item_name: "Power Bank",
-  //   saved_CO2_kg: 15,
-  //   comparision: "= planting 30 trees",
-  // };
+  
+  console.log(imageBase64)
+  
+  return {
+    item_name: "Power Bank",
+    saved_CO2_kg: 15,
+    comparision: "= planting 30 trees",
+  };
 
   const res = await fetch(
     "https://1758-2001-14bb-111-af71-7129-ba19-4a5b-3a55.ngrok-free.app/generate-response",
@@ -126,10 +126,7 @@ const uploadToGpt = async (imageBase64: string) => {
       body,
     }
   );
-  if (!res.ok) {
-    console.log(res.status);
-    throw new Error("Failed to upload to GPT");
-  }
+  
 
   console.log("got GPT response");
 
@@ -137,10 +134,92 @@ const uploadToGpt = async (imageBase64: string) => {
   return json as GptClassification;
 };
 
+const takeAndProcessPhoto = async (
+  camera: Camera,
+  setBoundingBox: Dispatch<SetStateAction<BoundingBoxResult | undefined>>
+) => {
+  const photo = await camera.takePhoto({
+    flash: "off",
+    qualityPrioritization: "speed",
+    enableShutterSound: false,
+  });
+  const result = await getObjectDetectionResult(photo);
+
+  const getGptResultAsync = async (boundingBox: BoundingBoxResult) => {
+    // on second screenshot of the same object, take a screenshot and get GPT result from it
+    if (boundingBox && boundingBox.sameIdRepetition === 1) {
+      const image = await cropBoundingBox(boundingBox);
+
+      console.log("got cropped image");
+      console.log(image.base64.substring(0, 50) + "...");
+
+      const classification = await uploadToGpt(image.base64);
+
+      setBoundingBox((b) => {
+        // only set bounding box if it's still the same object we're tracking
+        if (b?.detection.trackingID !== boundingBox.detection.trackingID)
+          return b;
+
+        return {
+          ...b,
+          classification,
+        };
+      });
+    }
+  };
+
+  setBoundingBox((lastBox) => {
+    const box = getBoundingBox(photo, result[0], lastBox);
+    void getGptResultAsync(box); // do not await
+    return box;
+  });
+};
+
+export const CameraView = () => {
+  const device = useCameraDevice("back");
+  const format = useCameraFormat(device, [
+    {
+      photoResolution: {
+        width: 512,
+        height: 512,
+      },
+    },
+  ]);
+
+  const ref = useRef<Camera>(null);
+  const [boundingBox, setBoundingBox] = useState<BoundingBoxResult | null>(
+    null
+  );
+
+  useEffect(() => {
+    let ended = false;
+    const runLoop = () => {
+      setTimeout(async () => {
+        if (ended) return;
+        await takeAndProcessPhoto(ref.current!, setBoundingBox);
+
+        runLoop();
+      }, 10);
+    };
+    runLoop();
+    return () => {
+      ended = true;
+    };
+  }, []);
 
   return (
     <>
-      
+      <Camera
+        style={StyleSheet.absoluteFill}
+        device={device}
+        format={format}
+        isActive={true}
+        ref={ref}
+        photo={true}
+        orientation="portrait"
+      />
+
+      {boundingBox && <DetailsCard boundingBox={boundingBox} />}
     </>
   );
 };
