@@ -103,18 +103,66 @@ const DetailsCard: FC<Props> = ({ boundingBox }) => {
         >
           {/* Card content */}
           <Link href="/details" style={{ flex: 1 }}>
-            
-              
+            <View
+              style={{
+                flex: 1,
+                padding: 10,
+                alignItems: "center",
+                width: center.width,
+                height: center.height,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  marginBottom: 8,
+                  color: "#fff",
+                  fontFamily: "Poppins_700Bold",
+                }}
+              >
                 {classification.item_name}
               </Text>
-              
-              
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: "#fff",
+                  fontFamily: "Poppins_500Medium",
+                }}
+              >
+                {classification.saved_CO2_kg} kg CO2
+              </Text>
+              <Text
+                style={{
+                  fontSize: 16,
+                  marginBottom: 8,
+                  color: "#fff",
+                  fontFamily: "Poppins_500Medium",
+                }}
+              >
                 {classification.comparision}
               </Text>
-              
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "bold",
+                  marginBottom: 16,
+                  color: "#fff",
+                  fontFamily: "Poppins_700Bold",
+                }}
+              >
                 {classification.saved_CO2_kg.toFixed()} points
               </Text>
-             
+              <View
+                style={{
+                  backgroundColor: "#97d197",
+                  padding: 8,
+                  alignSelf: "stretch",
+                  borderRadius: 8,
+                  alignItems: "center",
+                }}
+              >
                 <Text
                   style={{
                     fontSize: 14,
