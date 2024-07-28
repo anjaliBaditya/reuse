@@ -47,24 +47,7 @@ const DetailsCard: FC<Props> = ({ boundingBox }) => {
     };
   }, []);
 
-  const border = (
-    <View
-      style={{
-        position: "absolute",
-        // borderWidth: 2,
-        // borderColor: "#fff",
-        borderRadius: 16,
-        overflow: "hidden",
-        top: boundingBox.top,
-        left: boundingBox.left,
-        width: boundingBox.width,
-      }}
-    >
-      <Animated.View style={style}></Animated.View>
-    </View>
-  );
-  if (!classification) return border;
-
+  
   const center = {
     x: boundingBox.left + boundingBox.width / 2,
     y: boundingBox.top + (boundingBox.height / 2) * 0.6,
